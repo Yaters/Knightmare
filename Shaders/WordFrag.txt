@@ -1,0 +1,182 @@
+#version 430 core
+
+in vec2 TexCoords;
+out vec4 color;
+
+uniform sampler2D text;
+uniform vec3 textColor;
+uniform vec3 outerColor;
+
+uniform int textMode;
+
+void outline(float texAlpha, vec4 outlineColor);
+void alphaMask(float texAlpha);
+void outerGlow(float texAlpha, vec4 glowColor);
+void dropShadow(float texAlpha, vec2 offset);
+
+/*
+TODO: Make these functions combineable. As in I want to call
+alphamask();
+outline();
+outglow();
+And have a glowing, outlined character
+TODO: Implement Alpha to coverage for anti-aliasing maybe? Or screen space derivatives?
+TODO: Since the conditionals use a value computed within the shader, it computes every branch for every pixel. Fix that (mix, other)
+*/
+
+
+//Paper used smoothstep like EVERYWHERE. It might clamp the excess but STILL
+//Try some stuff out on your own! Like... idk, could you make a function that creates a transparent band 
+//in the middle of the letter? (eg drawcolor, fade to transparent, fade to color, draw color, stop)
+
+
+void main() {
+	//Distance from char stored in red component of TexCoords on[0,1]
+	float texValue = texture(text, TexCoords).r;
+
+	//NORMAL
+	
+	if(textMode == 0) {
+		alphaMask(texValue);
+	} 
+	//OUTLINE
+	else if(textMode == 1) {
+		outline(texValue, vec4(outerColor, 1.f));
+	} 
+	//GLOW
+	else if(textMode == 2) {
+		outerGlow(texValue, vec4(outerColor, 1.f));
+	} 
+	//SHADOW
+	else if (textMode == 3) {
+		dropShadow(texValue, vec2(0.005, 0.005)); // LOL Try this with too big a number and lookup will reach too far
+	}
+}
+
+/*
+Plain old draw a character. This will use the given color to draw character glyphs on the screen.
+Linear interpolation around edges, not too exciting.
+*/
+
+void alphaMask(float texAlpha) {
+	
+	if(texAlpha > 0.52) {
+		color = vec4(textColor, 1.0);
+	} else if (texAlpha > 0.5) {
+		color = vec4(textColor, texAlpha*25 - 12); //Linear interpolate (chose to do rather than smoothstep)
+	} else {
+		discard;
+	}
+
+
+}
+
+/*
+Function that creates an outline around the colors. Strength of the outlines depends on the if conditions
+If adjusting, makes sure to adjust the interpolations too.
+In future, may want to make a strength parameter to set along with character's scale.
+Outline color is currently passed in as black, but could be a uniform in the future. 
+*/
+
+void outline(float texAlpha, vec4 outlineColor) {
+
+	if(texAlpha > 0.55) {
+		color = vec4(textColor, 1.0); //Word
+	} else if (texAlpha > 0.51) {
+		texAlpha = texAlpha * 25 - 12;
+		color = vec4(textColor, 1.0) * texAlpha + outlineColor * (1-texAlpha); //Linear interpolate transition
+	} else if (texAlpha > 0.41) {
+		color = outlineColor; //outline
+	} else if (texAlpha >0.39) {
+		outlineColor.w = texAlpha * 25 - 9.25; //Fade
+		color = outlineColor;
+	} else {
+		discard;
+	}
+
+
+
+
+}
+
+/*
+Similar to outline, but covers a much wider range (all the way to distance = 0)
+The color transition is linearly interpolated. I may want to do the same in the character drawing function.
+Lol this is just a fun func. I'll probably never use it. Also glowColor could be uniform in future.
+*/
+
+void outerGlow(float texAlpha, vec4 glowColor) {
+	if(texAlpha > 0.51) {
+		color = vec4(textColor, 1.0); //character
+	} else if(texAlpha > 0.47) {
+		
+		texAlpha = texAlpha * 25 - 11.75; //TexValue is between 0.5 and 0.51
+		color = glowColor*(1-texAlpha) + vec4(textColor,1.0) * texAlpha; //transition
+
+	} else {
+
+		texAlpha = texAlpha * 2; //TexValue is between 0.0 and ~0.5	
+		vec4 sampled = vec4(1.0, 1.0, 1.0, smoothstep(0.0, 1, texAlpha));
+		color = glowColor * sampled; //glow
+		//the color transition gives this really cool blurry shadow effect
+
+	}	
+
+}
+
+void dropShadow(float texAlpha, vec2 offset) {
+
+
+	/* Lol, surprise edition
+	float texValue = texture(text, TexCoords - offset).r;
+	bool isShadow = false;
+
+	//how do I get current frag pos?
+	if(texValue > 0.5) {
+		color = vec4(0, 0, 0, 1.0);
+		isShadow = true;
+	} else if(texValue> 0.46) {
+		texValue = texValue * 25 - 11.5; //TexValue is between 0.49 and 0.5	
+		color = vec4(0, 0, 0, texValue); //Linear interpolate (chose to do rather than smoothstep)
+		isShadow = true;
+	}
+
+	
+	if(texAlpha > 0.5) {
+		color = vec4(textColor, 1.0);
+	} else if(texAlpha > 0.46 && !isShadow) {
+		texAlpha = texAlpha * 25 - 11.5; //TexValue is between 0.49 and 0.5	
+		color = vec4(textColor, texAlpha); //Linear interpolate (chose to do rather than smoothstep)
+	} 
+	*/
+
+	float texValue = texture(text, TexCoords - offset).r;
+
+	//Draw Word
+	if(texAlpha > 0.52) {
+		color = vec4(textColor, 1.0);
+		return;
+	} else if (texAlpha > 0.5) {
+		//Check if in shadow
+		if(texValue > 0.5) {
+			//This isn't theoretically smooth, but it's so fine no one will care
+			color = vec4(0, 0, 0, 0.8)*(1-texAlpha) + vec4(textColor,1.0) * texAlpha; //transition
+		} else {
+			color = vec4(textColor, texAlpha*25 - 12); //Linear interpolate
+		}
+		return;
+	}
+
+	//Second lookup for shadow
+	if(texValue > 0.52) {
+		color = vec4(0, 0, 0, 0.8);
+	} else if (texValue > 0.48) {
+		color = vec4(0, 0, 0, texValue * 25 - 12.1); //Linear interpolate (chose to do rather than smoothstep)
+	} else {
+		discard;
+	}
+
+}
+
+
+
