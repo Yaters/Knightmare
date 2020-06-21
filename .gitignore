@@ -36,7 +36,8 @@ mono_crash.*
 
 # Build results
 
-[Dd]ebug/
+# Same commented reason as x64/ below
+# [Dd]ebug/
 
 [Dd]ebugPublic/
 
