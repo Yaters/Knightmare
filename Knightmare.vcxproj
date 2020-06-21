@@ -127,42 +127,42 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Action.h" />
-    <ClInclude Include="ActionBox.h" />
-    <ClInclude Include="Button.h" />
-    <ClInclude Include="Character.h" />
-    <ClInclude Include="Collider.h" />
-    <ClInclude Include="Enemy.h" />
-    <ClInclude Include="Game.h" />
-    <ClInclude Include="GameObject.h" />
-    <ClInclude Include="InfoBox.h" />
-    <ClInclude Include="Player.h" />
-    <ClInclude Include="Resource_manager.h" />
-    <ClInclude Include="Selectable.h" />
-    <ClInclude Include="Shader.h" />
-    <ClInclude Include="SpriteRender.h" />
-    <ClInclude Include="Texture.h" />
-    <ClInclude Include="FontAtlas.h" />
+    <ClInclude Include="Headers\Action.h" />
+    <ClInclude Include="Headers\ActionBox.h" />
+    <ClInclude Include="Headers\Button.h" />
+    <ClInclude Include="Headers\Character.h" />
+    <ClInclude Include="Headers\Collider.h" />
+    <ClInclude Include="Headers\Enemy.h" />
+    <ClInclude Include="Headers\FontAtlas.h" />
+    <ClInclude Include="Headers\Game.h" />
+    <ClInclude Include="Headers\GameObject.h" />
+    <ClInclude Include="Headers\InfoBox.h" />
+    <ClInclude Include="Headers\Player.h" />
+    <ClInclude Include="Headers\Resource_manager.h" />
+    <ClInclude Include="Headers\Selectable.h" />
+    <ClInclude Include="Headers\Shader.h" />
+    <ClInclude Include="Headers\SpriteRender.h" />
+    <ClInclude Include="Headers\Texture.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Action.cpp" />
-    <ClCompile Include="ActionBox.cpp" />
-    <ClCompile Include="Button.cpp" />
-    <ClCompile Include="Character.cpp" />
-    <ClCompile Include="Collider.cpp" />
-    <ClCompile Include="Display.cpp" />
-    <ClCompile Include="Enemy.cpp" />
-    <ClCompile Include="GameObject.cpp" />
+    <ClCompile Include="CPP_Files\Action.cpp" />
+    <ClCompile Include="CPP_Files\ActionBox.cpp" />
+    <ClCompile Include="CPP_Files\Button.cpp" />
+    <ClCompile Include="CPP_Files\Character.cpp" />
+    <ClCompile Include="CPP_Files\Collider.cpp" />
+    <ClCompile Include="CPP_Files\Display.cpp" />
+    <ClCompile Include="CPP_Files\Enemy.cpp" />
+    <ClCompile Include="CPP_Files\FontAtlas.cpp" />
+    <ClCompile Include="CPP_Files\Game.cpp" />
+    <ClCompile Include="CPP_Files\GameObject.cpp" />
+    <ClCompile Include="CPP_Files\InfoBox.cpp" />
+    <ClCompile Include="CPP_Files\Player.cpp" />
+    <ClCompile Include="CPP_Files\Resource_manager.cpp" />
+    <ClCompile Include="CPP_Files\Selectable.cpp" />
+    <ClCompile Include="CPP_Files\Shader.cpp" />
+    <ClCompile Include="CPP_Files\SpriteRender.cpp" />
+    <ClCompile Include="CPP_Files\Texture.cpp" />
     <ClCompile Include="glad.c" />
-    <ClCompile Include="Game.cpp" />
-    <ClCompile Include="InfoBox.cpp" />
-    <ClCompile Include="Player.cpp" />
-    <ClCompile Include="Resource_manager.cpp" />
-    <ClCompile Include="Selectable.cpp" />
-    <ClCompile Include="Shader.cpp" />
-    <ClCompile Include="SpriteRender.cpp" />
-    <ClCompile Include="Texture.cpp" />
-    <ClCompile Include="FontAtlas.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Shaders\QuadFrag.txt" />
