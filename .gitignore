@@ -44,9 +44,12 @@ mono_crash.*
 
 [Rr]eleases/
 
-x64/
 
-x86/
+#These have been commented as the dll libraries within must be saved for the game to run
+
+# x64/
+
+# x86/
 
 [Ww][Ii][Nn]32/
 
