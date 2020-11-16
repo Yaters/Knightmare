@@ -10,6 +10,9 @@
 #include "Resource_manager.h"
 #include "Button.h"
 #include "ActionBox.h"
+#include <irrKlang/irrKlang.h>
+#pragma comment(lib, "irrKlang.lib")
+//^ Had to look that up, tells the linker wher to look for stuff, can do in project properties too
 
 
 #include <direct.h>
@@ -56,7 +59,12 @@ public:
 	Player* p1 = NULL;
 	Enemy* enemy1 = NULL;
 
+	//Drawer
 	SpriteRender* Renderer;
+
+	//Sound maker
+	irrklang::ISoundEngine* soundEngine;
+	irrklang::ISound* music;
 
 	GameObject background;
 

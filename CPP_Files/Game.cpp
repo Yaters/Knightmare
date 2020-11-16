@@ -11,11 +11,15 @@ GLfloat PLAYER_SPEED = 300.;
 Game::Game(GLuint width, GLuint height)
 	: State(GAME_ACTIVE), keys(), clicks(), mouseButtons(), Width(width), Height(height)
 {
+	soundEngine = irrklang::createIrrKlangDevice();
 	Renderer = 0;
 }
 
 Game::~Game() {
+	delete p1;
+	delete enemy1;
 	delete Renderer;
+	soundEngine->drop();
 }
 
 void Game::Init() {
@@ -97,6 +101,7 @@ void Game::Init() {
 		this->p1->color.a = 1.f;
 		this->enemy1->color.a = 1.f;
 		this->State = GAME_ACTIVE;
+		this->music->setIsPaused(false);
 	};
 	this->menuButtons[1] = Button("Exit", glm::vec2(Width / 2, Height / 4), glm::vec2(Width / 4,5* Height / 8), 12, TextMode::SHADOW);
 	this->menuButtons[1].setTextColor(glm::vec3(0.540, 0.062, 0.109), glm::vec3(0.0f, 0.0f, 0.0f));
@@ -124,18 +129,27 @@ void Game::Init() {
 		p1->setMoves(pActions);
 
 		this->State = GAME_ACTIVE;
+		//File, loop :), start paused, track (return ISound)
+		this->music = soundEngine->play2D("Music/BattleMono.mp3", true, false, true);
+		this->music->setVolume(0.3);
 	};
 	this->selectButtons[1] = Button("<<", glm::vec2(Width / 2, Height*5 / 64), glm::vec2(0, 43 * Height / 64), 6, TextMode::REGULAR);
 	this->selectButtons[1].setTextColor(glm::vec3(0.0f, 0.0, 0.0), glm::vec3(0.0f, 0.0f, 0.0f));
 	this->selectButtons[1].onClick = [this]() {
 		this->State = GAME_START;
+		//Start music
+		this->music = soundEngine->play2D("Music/TitleMono.mp3", true, false, true);
+		this->music->setVolume(0.25);
 	};
 
 	this->endButtons[0] = Button("Return To Title", glm::vec2(Width / 2, Height / 8), glm::vec2(Width / 4, 5 * Height / 8), 12, TextMode::SHADOW);
 	this->endButtons[0].setTextColor(glm::vec3(0.540, 0.062, 0.109), glm::vec3(0.0f, 0.0f, 0.0f));
 	this->endButtons[0].onClick = [this]() {
 		this->State = GAME_START;
-		//Put reset logic here later if you have some. Like resetting positions and stuff
+		//Start music
+		this->music = soundEngine->play2D("Music/TitleMono.mp3", true, false, true);
+		this->music->setVolume(0.25);
+		//Reset logic
 		delete p1;
 		delete enemy1;
 		p1 = new Player(Resource_manager::GetTexture("Sprite"), PLAYER_SPEED, glm::vec2(Width / 2.0, Height - 100), glm::vec4(0.6, 0.6, 1, 1), PLAYER_SIZE, glm::vec2(0.0, -1.0));
@@ -166,7 +180,7 @@ void Game::Init() {
 	
 	
 	
-	//TODO: Memory management, either delete these in a game cleanup or don't make them new;
+	//Deleted in destructor
 	p1 = new Player(Resource_manager::GetTexture("Sprite"), PLAYER_SPEED, glm::vec2(Width / 2.0, Height - 100), glm::vec4(0.6, 0.6, 1, 1), PLAYER_SIZE, glm::vec2(0.0, -1.0));
 	//InfoBox enemyBox(Resource_manager::GetTexture("InfoBox"), 100., 100., 100., glm::vec2(5, 5), glm::vec2(350, 150));
 	enemy1 = new Enemy(Resource_manager::GetTexture("Sprite"), (float) PLAYER_SPEED / 3.0f, glm::vec2(Width / 2.0, 100), glm::vec4(1, 0.6, 0.6, 1), PLAYER_SIZE, glm::vec2(0.0, 1.0));
@@ -174,6 +188,13 @@ void Game::Init() {
 
 	background.pos = glm::vec2(0, 0);
 	background.size = glm::vec2(Width, Height);
+
+	//Start music
+	//Weird bug, in irrklang stereo audio causes a MASSIVE crunch sound
+	//Almost blew out my speakers on that
+	//Solution is to convert to mono, I used audacity
+	this->music = soundEngine->play2D("Music/TitleMono.mp3", true, false, true);
+	this->music->setVolume(0.25);
 }
 
 //ORDER GOES: INIT, INPUT, UPDATE, RENDER
@@ -243,8 +264,7 @@ void Game::ProcessInput(GLfloat dt) {
 			State = GAME_EXIT;
 		}
 	} else if (State == GAME_ACTIVE) {
-		//Muahahahahaha I tricked you all by putting the input processing inside the player class! Huehuehuehuehuehuehue
-		//Honestly it just sort of hides the mess of if else click weird stuff that was input. yeah...
+
 		if (this->clicks[GLFW_KEY_ESCAPE]) {
 			this->clicks[GLFW_KEY_ESCAPE] = GL_FALSE;
 			this->State = GAME_MENU;
@@ -252,7 +272,11 @@ void Game::ProcessInput(GLfloat dt) {
 			this->enemy1->color *= 0.4f;
 			this->p1->color.a = 1.f;
 			this->enemy1->color.a = 1.f;
+			this->music->setIsPaused(true);
 		}
+
+		//Muahahahahaha I tricked you all by putting the input processing inside the player class! Huehuehuehuehuehuehue
+		//Honestly it just sort of hides the mess of if else click weird stuff that was input. yeah...
 
 		//Update position and actions based on input
 		p1->Update(Renderer, enemy1, dt, keys, clicks);
@@ -274,6 +298,7 @@ void Game::ProcessInput(GLfloat dt) {
 		if (this->clicks[GLFW_KEY_ESCAPE]) {
 			this->clicks[GLFW_KEY_ESCAPE] = GL_FALSE; 
 			menuButtons[0].onClick(); //Resumes game
+			this->music->setIsPaused(false);
 		}
 
 	} else {
@@ -360,8 +385,14 @@ void Game::DamageUpdate(Player* P, Enemy* E, GLfloat dt) {
 
 	Action::DamageUpdate(P, E, dt);
 
-	if (P->HP < 0) State = GAME_LOSE;
-	else if (E->HP < 0) State = GAME_WIN;
+	if (P->HP < 0) {
+		State = GAME_LOSE;
+		soundEngine->stopAllSounds();
+	}
+	else if (E->HP < 0) {
+		State = GAME_WIN;
+		soundEngine->stopAllSounds();
+	}
 
 }
 
